@@ -1,4 +1,4 @@
-# urartist
+# UrArtist
 
 A new Flutter project.
 
