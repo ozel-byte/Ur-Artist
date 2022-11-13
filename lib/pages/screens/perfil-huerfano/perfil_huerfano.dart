@@ -262,7 +262,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
           padding: const EdgeInsets.only(left: 20),
           child: Column(
             children: [
-              SizedBox(
+             const SizedBox(
                 height: 20,
               ),
               Row(
@@ -275,7 +275,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                         color: GlobalColor.textInforGeneralColor),
                   ),
                   Text(
-                    "Mala5@gmail.com",
+                    "Ozel2@gmail.com",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -283,7 +283,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                   )
                 ],
               ),
-              SizedBox(
+             const SizedBox(
                 height: 20,
               ),
               Row(
@@ -295,122 +295,18 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                         fontSize: 22,
                         color: GlobalColor.textInforGeneralColor),
                   ),
-                  Text("9713803554",
+                  Text("9713123554",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: GlobalColor.textInforGeneralColor))
                 ],
               ),
-              SizedBox(
-                height: 20,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Ranking: ",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: GlobalColor.textInforGeneralColor),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.yellow,
-                        size: 40,
-                      ),
-                      Icon(
-                        Icons.star,
-                        color: Colors.yellow,
-                        size: 40,
-                      ),
-                      Icon(
-                        Icons.star,
-                        color: Colors.yellow,
-                        size: 40,
-                      ),
-                      Icon(
-                        Icons.star,
-                        color: Colors.yellow,
-                        size: 40,
-                      ),
-                      Icon(
-                        Icons.star,
-                        size: 40,
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Generos: ",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: GlobalColor.textInforGeneralColor),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            color: GlobalColor.backgroundColorRadio,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          "Rock",
-                          style: TextStyle(
-                              color: GlobalColor.radioInfoGenere,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            color: GlobalColor.backgroundColorRadio,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          "Indie",
-                          style: TextStyle(
-                              color: GlobalColor.radioInfoGenere,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            color: GlobalColor.backgroundColorRadio,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          "Metal",
-                          style: TextStyle(
-                              color: GlobalColor.radioInfoGenere,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+             
+              
               Column(
                 children: [
-                  SizedBox(
+                const  SizedBox(
                     height: 20,
                   ),
                   Row(
@@ -424,7 +320,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                       ),
                     ],
                   ),
-                  SizedBox(
+                const  SizedBox(
                     height: 10,
                   ),
                   Column(
@@ -434,7 +330,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
+                             const CircleAvatar(
                                 radius: 30,
                               ),
                               Column(
@@ -461,7 +357,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                               )
                             ],
                           ),
-                          SizedBox(
+                         const SizedBox(
                             height: 10,
                           ),
                           Text(
@@ -472,14 +368,14 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                           )
                         ],
                       ),
-                      SizedBox(
+                    const  SizedBox(
                         height: 10,
                       ),
                       Column(
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
+                            const  CircleAvatar(
                                 radius: 30,
                               ),
                               Column(
@@ -506,7 +402,7 @@ class PerfilHuerfanoState extends State<PerfilHuerfano> {
                               )
                             ],
                           ),
-                          SizedBox(
+                         const SizedBox(
                             height: 10,
                           ),
                           Text(

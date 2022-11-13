@@ -39,7 +39,6 @@ class PerfilArtistaState extends State<PerfilArtista> {
       if (activePhotoAppBar) {
         if (_scrollControllerGrid.position.pixels ==
             _scrollControllerGrid.position.minScrollExtent) {
- 
           setState(() {
             activeGridScroll = false;
           });
@@ -53,13 +52,12 @@ class PerfilArtistaState extends State<PerfilArtista> {
       }
     });
     _scrollController.addListener(() {
-   
       if (_scrollController.position.maxScrollExtent ==
           _scrollController.position.pixels) {
         setState(() {});
         _scrollControllerGrid.animateTo(300,
             duration: Duration(seconds: 2), curve: Curves.ease);
-            activeGridScroll = true;
+        activeGridScroll = true;
       }
       if (_scrollController.position.pixels > 130) {
         setState(() {
@@ -84,172 +82,193 @@ class PerfilArtistaState extends State<PerfilArtista> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final args = ModalRoute.of(context)!.settings.arguments;
     return Scaffold(
-      body:  Stack(
-        children: [
-          CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverAppBar(
-              title: activeTextAppBar
-                  ? const Text(
-                      "Mala Racha",
-                      style: TextStyle(color: Colors.black),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [Text("Artista"), Icon(Icons.verified)],
-                    ),
-              backgroundColor: Colors.white,
-              expandedHeight: 320,
-              centerTitle: true,
-              actions: [
-                activePhotoAppBar
-                    ? const Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: CircleAvatar(
-                          radius: 25,
-                          backgroundImage: AssetImage("assets/profile.jpg"),
-                        ),
+        body: Stack(
+      children: [
+        CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverAppBar(
+                title: activeTextAppBar
+                    ? const Text(
+                        "Mala Racha",
+                        style: TextStyle(color: Colors.black),
                       )
-                    : Container()
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          width: size.width,
-                          height: size.height*0.25,
-                          child: const Image(
-                              fit: BoxFit.cover,
-                              image: NetworkImage("https://images.pexels.com/photos/1047442/pexels-photo-1047442.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")),
-                        ),
-                        Row(
-                          children: [
-                            FadeOut(
-                              duration: Duration(seconds: 2),
-                              child: Padding(
-                                  padding: EdgeInsets.only(
-                                      top: size.height * 0.2,
-                                      left: size.width * 0.05),
-                                  child: Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(50),
-                                        image:const DecorationImage(
-                                          fit: BoxFit.cover,
-                                            image:
-                                                NetworkImage("https://images.pexels.com/photos/1327426/pexels-photo-1327426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")),
-                                        border: Border.all(color: Colors.red,width: 3)),
-                                  )),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(
-                          top: size.height * 0.03, left: 20, right: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Mala Racha",
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold),
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [Text("Artista"), Icon(Icons.verified)],
+                      ),
+                backgroundColor: Colors.white,
+                expandedHeight: 320,
+                centerTitle: true,
+                actions: [
+                  activePhotoAppBar
+                      ? const Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: CircleAvatar(
+                            radius: 25,
+                            backgroundImage: AssetImage("assets/profile.jpg"),
                           ),
-                          Text(
-                              "Somos mala racha una banda de genero rock que hacer sonar sus bocinas",
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 16))
+                        )
+                      : Container()
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            width: size.width,
+                            height: size.height * 0.25,
+                            child: const Image(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(
+                                    "https://images.pexels.com/photos/1047442/pexels-photo-1047442.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")),
+                          ),
+                          Row(
+                            children: [
+                              FadeOut(
+                                duration: Duration(seconds: 2),
+                                child: Padding(
+                                    padding: EdgeInsets.only(
+                                        top: size.height * 0.2,
+                                        left: size.width * 0.05),
+                                    child: Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          image: const DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: NetworkImage(
+                                                  "https://images.pexels.com/photos/1327426/pexels-photo-1327426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")),
+                                          border: Border.all(
+                                              color: Colors.red, width: 3)),
+                                    )),
+                              ),
+                            ],
+                          )
                         ],
                       ),
-                    )
-                  ],
+                      Padding(
+                        padding: EdgeInsets.only(
+                            top: size.height * 0.03, left: 20, right: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              "Mala Racha",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                                "Somos mala racha una banda de genero rock que hacer sonar sus bocinas",
+                                style:
+                                    TextStyle(color: Colors.grey, fontSize: 16))
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                )),
+            SliverList(delegate: SliverChildListDelegate([tabs(size, args)]))
+          ],
+        ),
+        viewImageFullScreen
+            ? Positioned(
+                left: size.width * 0.12,
+                top: size.height * 0.32,
+                child: Container(
+                  width: size.width * 0.75,
+                  height: size.height * 0.35,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                            color: Colors.black.withOpacity(0.4))
+                      ],
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Column(
+                    children: [
+                      Container(
+                          width: size.width,
+                          height: size.height * 0.3,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10)),
+                            child: Image(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(imgSelected)),
+                          )),
+                      Text(
+                        "descripcion de la imagen",
+                        style: TextStyle(fontSize: 18),
+                      )
+                    ],
+                  ),
                 ),
-              )),
-          SliverList(delegate: SliverChildListDelegate([tabs(size)]))
-        ],
-      ),
-       viewImageFullScreen ? Positioned(
-          left: size.width*0.12,
-          top: size.height*0.32,
-          child: Container(
-              width: size.width*0.75,
-              height: size.height*0.35,
-              decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                  color: Colors.black.withOpacity(0.4)
-                )
-              ],
-              borderRadius: BorderRadius.circular(20)
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: size.width,
-                    height: size.height*0.3,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
-                      child: Image(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(imgSelected)),
-                    )),
-                  Text("descripcion de la imagen",style: TextStyle(fontSize: 18),)
-                ],
-              ),
-            ),
-        ): Text("")
-        ],
-      )
-    );
+              )
+            : Text("")
+      ],
+    ));
   }
 
-  Widget tabs(Size size) {
+  Widget tabs(Size size, args) {
     return Container(
       width: size.width,
       height: size.height * 0.89,
       color: Colors.white,
       child: DefaultTabController(
-          length: 3,
+          length: args == "view-artist" ? 2 : 3,
           child: Scaffold(
             backgroundColor: Colors.white,
             body: Column(
               children: [
-                const TabBar(
+                TabBar(
                   labelColor: Colors.black,
                   unselectedLabelColor: Colors.grey,
-                  tabs: [
-                    Tab(
-                      text: "Photo",
-                    ),
-                    Tab(
-                      text: "Videos",
-                    ),
-                    Tab(
-                      text: "Info",
-                    )
-                  ],
+                  tabs: args == "view-artist"
+                      ? [
+                          const Tab(
+                            text: "Photo",
+                          ),
+                          const Tab(
+                            text: "Videos",
+                          ),
+                        ]
+                      : [
+                          const Tab(
+                            text: "Photo",
+                          ),
+                          const Tab(
+                            text: "Videos",
+                          ),
+                          const Tab(
+                            text: "Info",
+                          )
+                        ],
                 ),
                 Expanded(
                   child: TabBarView(
-                    children: [
-                      photo(size),
-                      video(size),
-                      info(size),
-                    ],
+                    children: args == "view-artist"
+                        ? [
+                            photo(size),
+                            video(size),
+                          ]
+                        : [
+                            photo(size),
+                            video(size),
+                            info(size),
+                          ],
                   ),
                 )
               ],
@@ -549,8 +568,8 @@ class PerfilArtistaState extends State<PerfilArtista> {
               padding: const EdgeInsets.all(8.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child:
-                    Image(fit: BoxFit.cover, image: NetworkImage(images[index])),
+                child: Image(
+                    fit: BoxFit.cover, image: NetworkImage(images[index])),
               ),
             );
           },
@@ -577,26 +596,22 @@ class PerfilArtistaState extends State<PerfilArtista> {
           itemBuilder: (context, index) {
             return GestureDetector(
               onLongPress: () {
-                print("precionado: "+index.toString());
+                print("precionado: " + index.toString());
                 setState(() {
-                viewImageFullScreen = true;
-                imgSelected = images[index];
+                  viewImageFullScreen = true;
+                  imgSelected = images[index];
                 });
               },
-              
               onLongPressCancel: () {
                 setState(() {
-                viewImageFullScreen = false;
-                  
+                  viewImageFullScreen = false;
                 });
               },
               onLongPressEnd: (details) {
                 setState(() {
-                viewImageFullScreen = false;
-                  
+                  viewImageFullScreen = false;
                 });
               },
-              
               child: Padding(
                 padding: const EdgeInsets.only(left: 5, right: 5),
                 child: Card(

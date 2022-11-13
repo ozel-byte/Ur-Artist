@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.urartist">
+
+   <uses-permission android:name="android.permission.VIBRATE"/>
    <application
         android:label="urartist"
         android:name="${applicationName}"

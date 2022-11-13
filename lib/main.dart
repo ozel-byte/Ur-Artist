@@ -3,6 +3,7 @@ import 'package:urartist/pages/screens/dashboard-artista/dashboard.dart';
 import 'package:urartist/pages/screens/perfil-artista/perfil_artista.dart';
 import 'package:urartist/pages/screens/perfil-artista/perfil_artista_vista_user.dart';
 import 'package:urartist/pages/screens/perfil-huerfano/perfil_huerfano.dart';
+import 'package:urartist/routes/appRoute.dart';
 
 void main() => runApp(const MyApp());
 
@@ -11,10 +12,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return  MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Material App',
-      home: PerfilHuerfano(),
+      initialRoute: AppRoute.initialRoute,
+      routes: AppRoute.routes,
     );
   }
 }
