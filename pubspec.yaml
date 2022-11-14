@@ -39,6 +39,8 @@ dependencies:
   animate_do: ^2.1.0
   iconsax: ^0.0.8
   vibration: ^1.7.5
+  file_picker: ^5.2.2
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:
