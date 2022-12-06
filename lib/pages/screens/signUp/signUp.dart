@@ -2,7 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:urartist/controller/validTextField.dart';
+import 'package:urartist/controller/services.dart';
+import 'package:urartist/pages/screens/signUp/viewLocation.dart';
 import 'package:urartist/utils/global_colors.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -13,7 +17,7 @@ class SignUp extends StatefulWidget {
   State<SignUp> createState() => _SignUpState();
 }
 
-class _SignUpState extends State<SignUp> {
+class _SignUpState extends State<SignUp> with TickerProviderStateMixin {
   bool switchArtista = false;
   bool switchUser = true;
   bool switchHuerfano = false;
@@ -21,30 +25,56 @@ class _SignUpState extends State<SignUp> {
   File? imgBackground;
   String? imgProfileBase64;
   String? imgBackgroundBase64;
-  TextEditingController _controllerUsername = TextEditingController();
-  TextEditingController _controllerLstName = TextEditingController();
-  TextEditingController _controllerUsernameContrasena = TextEditingController();
-  TextEditingController _controllerUsernameEmail = TextEditingController();
-  TextEditingController _controllerUsernameBio = TextEditingController();
-  TextEditingController _controllerUsernameUbicacion = TextEditingController();
-  TextEditingController _controllerPhone = TextEditingController();
-  TextEditingController _controllerInstrumentos = TextEditingController();
-  TextEditingController _controllerEmailContact = TextEditingController();
-  TextEditingController _controllerformacion = TextEditingController();
-  TextEditingController _controllerGenero = TextEditingController();
-  TextEditingController _controllerEmailContactPresskit =
+  List<String> gen = [];
+  double heightBottom = 350.0;
+  String genDrow = "";
+  bool loading = false;
+  String latitude = "Selecione su ubicacón";
+  String longitude = "";
+  final PageController _pageController = PageController();
+  Map<String, dynamic>? presskit;
+  final TextEditingController _controllerUsername = TextEditingController();
+  final TextEditingController _controllerLstName = TextEditingController();
+  final TextEditingController _controllerUsernameContrasena = TextEditingController();
+  final TextEditingController _controllerUsernameEmail = TextEditingController();
+  final TextEditingController _controllerUsernameBio = TextEditingController();
+  final TextEditingController _controllerUsernameUbicacion =
       TextEditingController();
-  TextEditingController _controllerLinkContenido = TextEditingController();
-  TextEditingController _controllerAllPersons = TextEditingController();
+  final TextEditingController _controllerPhone = TextEditingController();
+  final TextEditingController _controllerInstrumentos = TextEditingController();
+  final TextEditingController _controllerEmailContact = TextEditingController();
+  final TextEditingController _controllerformacion = TextEditingController();
+  final TextEditingController _controllerGenero = TextEditingController();
+  final TextEditingController _controllerEmailContactPresskit =
+      TextEditingController();
+  final TextEditingController _controllerLinkContenido =
+      TextEditingController();
+  final TextEditingController _controllerAllPersons = TextEditingController();
 
   int currentIndexPresskit = 0;
   bool savePresskit = false;
+  bool statusMessageErrorUsername = false;
+  bool statusMessageErrorPassword = false;
+  bool statusMessageErrorEmail = false;
+  bool statusMessageErrorBio = false;
+  bool statusMessageErrorGps = false;
+  bool statusMessageErrorNumber = false;
+  bool statusMessageErrorLastName = false;
+  bool statusMessageErrorInstrumet = false;
+  bool statusMessageErrorEmailContact = false;
+
+  String valueBio = "";
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 238, 238, 238),
+      backgroundColor: const Color.fromARGB(255, 238, 238, 238),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.0,
@@ -63,26 +93,24 @@ class _SignUpState extends State<SignUp> {
           style: TextStyle(color: Color(0xff3F494F)),
         ),
         actions: [
-          IconButton(
-              onPressed: () {
-                if (_controllerEmailContact.text.isNotEmpty &&
-                    _controllerInstrumentos.text.isNotEmpty &&
-                    _controllerLstName.text.isNotEmpty &&
-                    _controllerPhone.text.isNotEmpty &&
-                    _controllerUsername.text.isNotEmpty &&
-                    _controllerUsernameBio.text.isNotEmpty &&
-                    _controllerUsernameContrasena.text.isNotEmpty &&
-                    _controllerUsernameEmail.text.isNotEmpty &&
-                    _controllerUsernameUbicacion.text.isNotEmpty) {
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Rellenar todos los campos")));
-                }
-              },
-              icon: const Icon(
-                Icons.check,
-                color: Colors.grey,
-              ))
+          loading
+              ? CircularProgressIndicator()
+              : IconButton(
+                  onPressed: () async {
+                    
+                    if (switchArtista) {
+                      verifyArtist();
+                    } else if (switchHuerfano) {
+                    } else if (switchUser) {
+                      verifyClient();
+                    }
+
+                    
+                  },
+                  icon: const Icon(
+                    Icons.check,
+                    color: Colors.grey,
+                  ))
         ],
       ),
       body: SingleChildScrollView(
@@ -94,7 +122,7 @@ class _SignUpState extends State<SignUp> {
             ),
             Container(
               width: size.width,
-              height: switchHuerfano ? size.height * 1 : size.height * 0.8,
+              height: switchHuerfano ? size.height * 1.2 : size.height * 0.9,
               color: Colors.white,
               child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -143,7 +171,7 @@ class _SignUpState extends State<SignUp> {
   Container typeUser(Size size) {
     return Container(
       width: size.width,
-      height: size.height * 0.3,
+      height: size.height * 0.4,
       decoration: BoxDecoration(color: Colors.white, boxShadow: [
         BoxShadow(
             blurRadius: 2, spreadRadius: 2, color: Colors.grey.withOpacity(0.1))
@@ -167,10 +195,97 @@ class _SignUpState extends State<SignUp> {
           ListTile(
             leading: const Icon(Icons.music_note),
             title: const Text("Artista"),
+            subtitle: RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                    text: "Usuario en modo Artista ",
+                    style: TextStyle(color: Colors.black.withOpacity(0.6))),
+                TextSpan(
+                    text: "Mas",
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        print("object");
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return Container(
+                              height: 500,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: GlobalColor.primary),
+                                      child: ZoomIn(
+                                          child: const Icon(
+                                        Icons.music_note_outlined,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ))),
+                                  Text(
+                                    "Modo Artista",
+                                    style: TextStyle(
+                                        color: GlobalColor.primary,
+                                        fontSize: 18),
+                                  ),
+                                  const ListTile(
+                                    leading: Icon(Icons.mediation_rounded),
+                                    title: Text(
+                                        "Un medio para promocionar a su banda"),
+                                    subtitle: Text("Presskit"),
+                                  ),
+                                  Divider(),
+                                  const ListTile(
+                                    leading:
+                                        Icon(Icons.video_camera_back_outlined),
+                                    title: Text("Publicar Fotos/Videos"),
+                                    subtitle: Text("Videos maximo de 10seg"),
+                                  ),
+                                  
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    style: TextStyle(
+                        color: GlobalColor.primary,
+                        fontWeight: FontWeight.bold))
+              ]),
+
+              // elevador pitch
+              // poster
+              // tablero
+              // acta
+              // plaenacion
+              // presupuesto
+              // riesgo
+              // cronograma
+              // product backblog
+              // conjunto de historias
+
+              // ejecution
+              // carpegta por spring
+
+              // cierre
+              // comprobacion de gastos
+              // encuesta (sin contestar resultados graficas)
+              // conclusion sobre la solvatacion de la necesidad evaluacion de lo que se propuso y lo wue se obtuvo
+              // reporte de riesgos
+            ),
             trailing: Switch(
+              activeColor: Colors.white,
+              activeTrackColor: GlobalColor.primary,
+              inactiveTrackColor: Colors.grey,
               value: switchArtista,
               onChanged: (value) {
                 switchArtista = value;
+                latitude = "";
                 switchHuerfano = false;
                 switchUser = false;
                 setState(() {});
@@ -178,29 +293,159 @@ class _SignUpState extends State<SignUp> {
               },
             ),
           ),
+          const Divider(
+            indent: 20,
+            color: Colors.grey,
+          ),
           ListTile(
             leading: const Icon(Icons.person_pin_circle_outlined),
             title: const Text("Usuario Normal"),
+            subtitle: RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                    text: "Comunidad ",
+                    style: TextStyle(color: Colors.black.withOpacity(0.6))),
+                TextSpan(
+                    text: "Más",
+                    style: const TextStyle(
+                        color: GlobalColor.primary,
+                        fontWeight: FontWeight.bold),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return Container(
+                              height: 300,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: GlobalColor.primary),
+                                      child: ZoomIn(
+                                          child: const Icon(
+                                        Icons.person_pin_circle_sharp,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ))),
+                                  const Text(
+                                    "Modo Comunidad",
+                                    style: TextStyle(
+                                        color: GlobalColor.primary,
+                                        fontSize: 18),
+                                  ),
+                                  const ListTile(
+                                    leading: Icon(Icons.person_search_outlined),
+                                    title: Text(
+                                        "Encontrar variedad de grupos musicales para amenizar tu evento"),
+                                    subtitle:
+                                        Text("Artista dentro de tu localidad"),
+                                  ),
+                                  Divider(),
+                                  const ListTile(
+                                    leading:
+                                        Icon(Icons.folder_special_outlined),
+                                    title:
+                                        Text("Añadir a tus artistas favoritos"),
+                                    subtitle: Text(
+                                        "Ver en todo momento lo que comparten sus artistas"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      })
+              ]),
+            ),
             trailing: Switch(
+              activeColor: Colors.white,
+              activeTrackColor: GlobalColor.primary,
+              inactiveTrackColor: Colors.grey,
               value: switchUser,
               onChanged: (value) {
                 switchUser = value;
                 switchArtista = false;
                 switchHuerfano = false;
+                imgProfile = null;
                 setState(() {});
                 trashTextEdingController();
               },
             ),
           ),
+          Divider(
+            indent: 20,
+            color: Colors.grey,
+          ),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text("Huerfano"),
+            subtitle: RichText(
+                text: TextSpan(children: [
+              TextSpan(
+                  text: "Artista huerfano ",
+                  style: TextStyle(color: Colors.black.withOpacity(0.6))),
+              TextSpan(
+                  text: "Más",
+                  style: const TextStyle(
+                      color: GlobalColor.primary, fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return Container(
+                            height: 300,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        color: GlobalColor.primary),
+                                    child: ZoomIn(
+                                        child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ))),
+                                const Text(
+                                  "Modo Huerfano",
+                                  style: TextStyle(
+                                      color: GlobalColor.primary, fontSize: 18),
+                                ),
+                                const ListTile(
+                                  leading: Icon(Icons.person_search_outlined),
+                                  title: Text(
+                                      "Dar a conocer tu talento para que un grupo musical te contacte"),
+                                  subtitle: Text("Unirte a una banda"),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    })
+            ])),
             trailing: Switch(
+              activeColor: Colors.white,
+              activeTrackColor: GlobalColor.primary,
+              inactiveTrackColor: Colors.grey,
               value: switchHuerfano,
               onChanged: (value) {
                 switchHuerfano = value;
+                latitude = "Selecion su ubicacion";
                 switchArtista = false;
                 switchUser = false;
+                imgProfile = null;
                 setState(() {});
                 trashTextEdingController();
               },
@@ -235,7 +480,8 @@ class _SignUpState extends State<SignUp> {
           const SizedBox(
             height: 10,
           ),
-          const ListTile(
+          ListTile(
+            onTap: () {},
             leading: CircleAvatar(
               radius: 30,
               backgroundColor: GlobalColor.primary,
@@ -301,17 +547,23 @@ class _SignUpState extends State<SignUp> {
 
               if (result != null) {
                 imgProfile = File(result.files.single.path!);
+                setState(() {});
                 List<int> imgbytes = imgProfile!.readAsBytesSync();
                 imgProfileBase64 = base64Encode(imgbytes);
               } else {
                 // User canceled the picker
               }
             },
-            child: const ListTile(
-              leading: CircleAvatar(
-                radius: 30,
-                backgroundColor: GlobalColor.primary,
-              ),
+            child: ListTile(
+              leading: imgProfile != null
+                  ? CircleAvatar(
+                      radius: 30,
+                      backgroundImage: FileImage(imgProfile!),
+                    )
+                  : const CircleAvatar(
+                      radius: 30,
+                      backgroundColor: GlobalColor.primary,
+                    ),
               title: Text("Cambiar Imagen de perfil"),
               subtitle: Text("Precione para cambiar su foto de perfil"),
             ),
@@ -338,18 +590,23 @@ class _SignUpState extends State<SignUp> {
 
               if (result != null) {
                 imgBackground = File(result.files.single.path!);
-                List<int> imgbytes = imgBackground!.readAsBytesSync();
-                imgBackgroundBase64 = base64Encode(imgbytes);
+                setState(() {});
               } else {
                 // User canceled the picker
               }
             },
             child: ListTile(
               leading: Container(
-                width: 70,
-                height: 50,
-                color: Colors.grey.withOpacity(0.2),
-              ),
+                  width: 70,
+                  height: 50,
+                  decoration: imgBackground == null
+                      ? BoxDecoration(
+                          color: Colors.grey.withOpacity(0.2),
+                        )
+                      : BoxDecoration(
+                          image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: FileImage(imgBackground!)))),
               title: Text("Cambiar Imagen de fondo"),
               subtitle: Text("Precione para cambiar su portada"),
             ),
@@ -359,21 +616,30 @@ class _SignUpState extends State<SignUp> {
           ),
           GestureDetector(
             onTap: () {
+              heightBottom = 350;
               showModalBottomSheet(
+                  isScrollControlled: true,
                   context: context,
+                  enableDrag: true,
                   builder: (context) {
                     return BottomSheet(
-                        onClosing: () {},
+                        onClosing: () {
+                          print("se cerro");
+                        },
+                        animationController:
+                            BottomSheet.createAnimationController(this),
                         builder: (context) {
                           currentIndexPresskit = 0;
+
                           return StatefulBuilder(builder: (context, setState) {
                             return Container(
-                                height: 500,
+                                height: heightBottom,
                                 child: Column(
                                   children: [
                                     Container(
-                                      height: 380,
+                                      height: 300,
                                       child: PageView(
+                                        controller: _pageController,
                                         onPageChanged: (value) {
                                           setState(() {
                                             currentIndexPresskit = value;
@@ -386,44 +652,93 @@ class _SignUpState extends State<SignUp> {
                                             children: [
                                               Container(
                                                 width: size.width,
-                                                height: 380,
+                                                height: 300,
                                                 child: Column(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
                                                           .spaceEvenly,
                                                   children: [
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceEvenly,
                                                       children: [
-                                                        Text(
-                                                            "Año de formacion"),
-                                                        SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                        Container(
-                                                            width: size.width *
-                                                                0.8,
-                                                            decoration: BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .withOpacity(
-                                                                            0.5))),
-                                                            child:
-                                                                const TextField(
-                                                              decoration: InputDecoration(
-                                                                  border:
-                                                                      InputBorder
+                                                        Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                           const Text(
+                                                                "Año de formacion"),
+                                                           const SizedBox(
+                                                              height: 10,
+                                                            ),
+                                                            Container(
+                                                                width:
+                                                                    size.width *
+                                                                        0.4,
+                                                                decoration: BoxDecoration(
+                                                                    border: Border.all(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .withOpacity(
+                                                                                0.5))),
+                                                                child:
+                                                                    TextField(
+                                                                  controller:
+                                                                      _controllerformacion,
+                                                                  keyboardType:
+                                                                      TextInputType
+                                                                          .number,
+                                                                  decoration: const InputDecoration(
+                                                                      border: InputBorder
                                                                           .none,
-                                                                  contentPadding:
-                                                                      EdgeInsets
-                                                                          .all(
+                                                                      contentPadding:
+                                                                          EdgeInsets.all(
                                                                               10),
-                                                                  hintText:
-                                                                      "Ingrese su año de formacion"),
-                                                            ))
+                                                                      hintText:
+                                                                          "Ingrese su año de formacion"),
+                                                                ))
+                                                          ],
+                                                        ),
+                                                        Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                           const Text(
+                                                                "Total de Integrantes"),
+                                                           const SizedBox(
+                                                              height: 10,
+                                                            ),
+                                                            Container(
+                                                                width:
+                                                                    size.width *
+                                                                        0.4,
+                                                                decoration: BoxDecoration(
+                                                                    border: Border.all(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .withOpacity(
+                                                                                0.5))),
+                                                                child:
+                                                                    TextField(
+                                                                  controller:
+                                                                      _controllerAllPersons,
+                                                                  keyboardType:
+                                                                      TextInputType
+                                                                          .number,
+                                                                  decoration: const InputDecoration(
+                                                                      border: InputBorder
+                                                                          .none,
+                                                                      contentPadding:
+                                                                          EdgeInsets.all(
+                                                                              10),
+                                                                      hintText:
+                                                                          "Ingrese el total de los integrantes"),
+                                                                ))
+                                                          ],
+                                                        ),
                                                       ],
                                                     ),
                                                     Column(
@@ -431,8 +746,8 @@ class _SignUpState extends State<SignUp> {
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
-                                                        Text("Correo Contacto"),
-                                                        SizedBox(
+                                                       const Text("Correo Contacto"),
+                                                       const SizedBox(
                                                           height: 10,
                                                         ),
                                                         Container(
@@ -444,9 +759,20 @@ class _SignUpState extends State<SignUp> {
                                                                         .grey
                                                                         .withOpacity(
                                                                             0.5))),
-                                                            child:
-                                                                const TextField(
-                                                              decoration: InputDecoration(
+                                                            child: TextField(
+                                                              controller:
+                                                                  _controllerEmailContactPresskit,
+                                                              onTap: () {
+                                                                print("hola");
+                                                                setState(
+                                                                  () {
+                                                                    heightBottom =
+                                                                        size.height *
+                                                                            0.8;
+                                                                  },
+                                                                );
+                                                              },
+                                                              decoration: const InputDecoration(
                                                                   contentPadding:
                                                                       EdgeInsets
                                                                           .all(
@@ -456,40 +782,6 @@ class _SignUpState extends State<SignUp> {
                                                                           .none,
                                                                   hintText:
                                                                       "Ingrese su correo de contacto"),
-                                                            ))
-                                                      ],
-                                                    ),
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                            "Total de Integrantes"),
-                                                        SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                        Container(
-                                                            width: size.width *
-                                                                0.8,
-                                                            decoration: BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .withOpacity(
-                                                                            0.5))),
-                                                            child:
-                                                                const TextField(
-                                                              decoration: InputDecoration(
-                                                                  border:
-                                                                      InputBorder
-                                                                          .none,
-                                                                  contentPadding:
-                                                                      EdgeInsets
-                                                                          .all(
-                                                                              10),
-                                                                  hintText:
-                                                                      "Ingrese el total de los integrantes"),
                                                             ))
                                                       ],
                                                     ),
@@ -511,11 +803,16 @@ class _SignUpState extends State<SignUp> {
                                                       MainAxisAlignment
                                                           .spaceEvenly,
                                                   children: [
-                                                    Text("Genero"),
-                                                    SizedBox(
+                                                   const Text("Genero"),
+                                                   const SizedBox(
                                                       height: 10,
                                                     ),
-                                                    Container(
+                                                    FutureBuilder(
+                                                      future: ApiServices().getGen(),
+                                                      builder: (context, AsyncSnapshot<List<String>> snapshot) {
+                                                        if (snapshot.hasData) {
+                                                          
+                                                          return Container(
                                                         width: size.width * 0.8,
                                                         decoration: BoxDecoration(
                                                             border: Border.all(
@@ -523,23 +820,39 @@ class _SignUpState extends State<SignUp> {
                                                                     .grey
                                                                     .withOpacity(
                                                                         0.5))),
-                                                        child: const TextField(
-                                                          maxLines: 5,
-                                                          decoration:
-                                                              InputDecoration(
-                                                                  border:
-                                                                      InputBorder
-                                                                          .none,
-                                                                  hintText:
-                                                                      "Ingrese sus generos"),
-                                                        ))
+                                                        child: DropdownButton(
+                                                          isExpanded: true,
+                                                          itemHeight: null,
+                                                          value: genDrow,
+                                                          items: snapshot.data!.map<
+                                                              DropdownMenuItem<
+                                                                  String>>((e) {
+                                                            return DropdownMenuItem(
+                                                              value: e,
+                                                              child: Text(e),
+                                                            );
+                                                          }).toList(),
+                                                          onChanged: (value) {
+                                                            setState(
+                                                              () {
+                                                            genDrow = value!;
+
+                                                              },
+                                                            );
+                                                          },
+                                                        ));
+                                                        }else{
+                                                          return const CircularProgressIndicator();
+                                                        }
+                                                      },
+                                                    )
                                                   ],
                                                 ),
                                                 Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(
+                                                    const Text(
                                                         "Link a su contenido en plataformas externas"),
                                                     SizedBox(
                                                       height: 10,
@@ -552,15 +865,19 @@ class _SignUpState extends State<SignUp> {
                                                                     .grey
                                                                     .withOpacity(
                                                                         0.5))),
-                                                        child: const TextField(
+                                                        child: TextField(
                                                           maxLines: 5,
-                                                          decoration:
-                                                              InputDecoration(
-                                                                  border:
-                                                                      InputBorder
-                                                                          .none,
-                                                                  hintText:
-                                                                      "Ingrese los links"),
+                                                          controller:
+                                                              _controllerLinkContenido,
+                                                          decoration: const InputDecoration(
+                                                              contentPadding:
+                                                                  EdgeInsets
+                                                                      .all(10),
+                                                              border:
+                                                                  InputBorder
+                                                                      .none,
+                                                              hintText:
+                                                                  "Ingrese los links"),
                                                         ))
                                                   ],
                                                 ),
@@ -572,7 +889,9 @@ class _SignUpState extends State<SignUp> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        if (currentIndexPresskit == 1) {
+                                        if (currentIndexPresskit == 0) {
+                                          _pageController.jumpToPage(1);
+                                        } else if (currentIndexPresskit == 1) {
                                           savePresskitFunc();
                                           Navigator.pop(context);
                                         }
@@ -604,11 +923,11 @@ class _SignUpState extends State<SignUp> {
               title: Text("Agregar presskit"),
               trailing: savePresskit
                   ? ZoomIn(
-                    child: const Icon(
+                      child: const Icon(
                         Icons.check_circle,
                         color: GlobalColor.primary,
                       ),
-                  )
+                    )
                   : const Text(""),
             ),
           )
@@ -635,8 +954,8 @@ class _SignUpState extends State<SignUp> {
       ]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Padding(
+        children: [
+          const Padding(
             padding: EdgeInsets.only(left: 20, top: 20),
             child: Text(
               "Foto Perfil",
@@ -646,16 +965,31 @@ class _SignUpState extends State<SignUp> {
                   fontSize: 18),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           ListTile(
-            leading: CircleAvatar(
-              radius: 30,
-              backgroundColor: GlobalColor.primary,
-            ),
-            title: Text("Cambiar Imagen de perfil"),
-            subtitle: Text("Precione para cambiar su foto de perfil"),
+            onTap: () async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+              if (result != null) {
+                imgProfile = File(result.files.single.path!);
+                setState(() {});
+              } else {
+                // User canceled the picker
+              }
+            },
+            leading: imgProfile == null
+                ? const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: GlobalColor.primary,
+                  )
+                : CircleAvatar(
+                    radius: 30,
+                    backgroundImage: FileImage(imgProfile!),
+                  ),
+            title: const Text("Cambiar Imagen de perfil"),
+            subtitle: const Text("Precione para cambiar su foto de perfil"),
           )
         ],
       ),
@@ -682,13 +1016,34 @@ class _SignUpState extends State<SignUp> {
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsername,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validUsername(value)) {
+                    setState(() {
+                      statusMessageErrorUsername = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorUsername = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorUsername
+                        ? "Maximo 10 caracteres"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorUsername
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorUsername
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su nombre"),
@@ -699,18 +1054,39 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Contraseña"),
-            SizedBox(
+            const Text("Contraseña"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameContrasena,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validPassword(value)) {
+                    setState(() {
+                      statusMessageErrorPassword = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorPassword = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorPassword
+                        ? "Maximo 10 caracteres"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorPassword
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorPassword
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su contraseña"),
@@ -721,18 +1097,39 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Apellidos"),
-            SizedBox(
+            const Text("Apellidos"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerLstName,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validLastName(value)) {
+                    setState(() {
+                      statusMessageErrorLastName = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorLastName = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorLastName
+                        ? "Maximo 20 caracteres"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorLastName
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorLastName
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su apellido"),
@@ -743,18 +1140,38 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Correo"),
-            SizedBox(
+            const Text("Correo"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameEmail,
-                decoration: const InputDecoration(
+                keyboardType: TextInputType.emailAddress,
+                onChanged: (value) {
+                  if (ValidTextField().validEmail(value)) {
+                    setState(() {
+                      statusMessageErrorEmail = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorEmail = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText:
+                        statusMessageErrorEmail ? "Correo invalido" : "",
+                    counterStyle: TextStyle(
+                        color:
+                            statusMessageErrorEmail ? Colors.red : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorEmail
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su correo"),
@@ -765,18 +1182,39 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Telefono"),
-            SizedBox(
+            const Text("Telefono"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerPhone,
-                decoration: const InputDecoration(
+                keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  if (ValidTextField().validNumber(value)) {
+                    setState(() {
+                      statusMessageErrorNumber = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorNumber = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText:
+                        statusMessageErrorNumber ? "Numero invalido" : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorNumber
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorNumber
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su telefono"),
@@ -808,14 +1246,35 @@ class _SignUpState extends State<SignUp> {
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
-              decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
+              width: size.width * 0.88,
+              decoration: const BoxDecoration(
+                color: Color(0xffF7F7F7),
+              ),
               child: TextField(
                 controller: _controllerUsername,
-                decoration: const InputDecoration(
+                maxLength: 20,
+                onChanged: (value) {
+                  if (ValidTextField().validUsername(value)) {
+                    setState(() {
+                      statusMessageErrorUsername = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorUsername = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorUsername
+                        ? "maximo 20 caracteres"
+                        : "",
+                    counterStyle: const TextStyle(color: Colors.red),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: statusMessageErrorUsername
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su nombre"),
               ),
@@ -825,19 +1284,39 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Contraseña"),
-            SizedBox(
+            const Text("Contraseña"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameContrasena,
-                decoration: const InputDecoration(
+                maxLength: 10,
+                obscureText: true,
+                onChanged: (value) {
+                  if (ValidTextField().validPassword(value)) {
+                    setState(() {
+                      statusMessageErrorPassword = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorPassword = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorPassword
+                        ? "Maximo 10 caracteres"
+                        : "",
+                    counterStyle: const TextStyle(color: Colors.red),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: statusMessageErrorPassword
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su contraseña"),
               ),
@@ -847,19 +1326,36 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Correo"),
-            SizedBox(
+            const Text("Correo"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameEmail,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validEmail(value)) {
+                    setState(() {
+                      statusMessageErrorEmail = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorEmail = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText:
+                        statusMessageErrorEmail ? "Correo invalido" : "",
+                    counterStyle: const TextStyle(color: Colors.red),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: statusMessageErrorEmail
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su correo"),
               ),
@@ -869,22 +1365,35 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Bio"),
-            SizedBox(
+            const Text("Bio"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 maxLines: 5,
                 controller: _controllerUsernameBio,
-                decoration: const InputDecoration(
-                    focusedBorder: OutlineInputBorder(
+                onChanged: (value) {
+                  valueBio = value;
+                  setState(() {});
+                },
+                decoration: InputDecoration(
+                    counterText: "${valueBio.length}/150",
+                    helperText:
+                        valueBio.length > 150 ? "Maximo 150 caracteres" : "",
+                    helperStyle: TextStyle(
+                        color:
+                            valueBio.length >= 150 ? Colors.red : Colors.grey),
+                    counterStyle: TextStyle(
+                        color:
+                            valueBio.length >= 150 ? Colors.red : Colors.grey),
+                    focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    hintText: "Escriba su BioGrfia"),
+                    hintText: "Escriba su biografia"),
               ),
             )
           ],
@@ -896,17 +1405,71 @@ class _SignUpState extends State<SignUp> {
             SizedBox(
               height: 10,
             ),
+            GestureDetector(
+              onTap: () async {
+                final position =
+                    await Navigator.push(context, MaterialPageRoute(
+                  builder: (context) {
+                    return const ViewLocation();
+                  },
+                ));
+                print(position);
+                setState(() {
+                  latitude =
+                      position["latitude"] + "  -  " + position["longitude"];
+                });
+              },
+              child: Container(
+                width: size.width * 0.88,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    color: Color(0xffF7F7F7)),
+                child: Text(latitude),
+              ),
+            )
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Numero telefono"),
+            const SizedBox(
+              height: 10,
+            ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
-                controller: _controllerUsernameUbicacion,
-                decoration: const InputDecoration(
+                controller: _controllerPhone,
+                keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  if (ValidTextField().validNumber(value)) {
+                    setState(() {
+                      statusMessageErrorNumber = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorNumber = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorNumber
+                        ? "Numero telefono invalido"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorNumber
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: statusMessageErrorNumber
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    hintText: "Selecione su ubicacion"),
+                    hintText: "Escriba un numero telefonico valido"),
               ),
             )
           ],
@@ -927,24 +1490,43 @@ class _SignUpState extends State<SignUp> {
               fontWeight: FontWeight.w500,
               fontSize: 18),
         ),
-        SizedBox(
+        const SizedBox(
           height: 10,
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Nombre de usuario"),
-            SizedBox(
+            const Text("Nombre de usuario"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsername,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validUsername(value)) {
+                    setState(() {
+                      statusMessageErrorUsername = true;
+                    });
+                  } else {
+                    statusMessageErrorUsername = false;
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorUsername
+                        ? "Maximo 10 caracteres"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorUsername
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorUsername
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su nombre de usuario"),
@@ -955,19 +1537,39 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Correo"),
-            SizedBox(
+            const Text("Correo"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameEmail,
-                decoration: const InputDecoration(
+                keyboardType: TextInputType.emailAddress,
+                onChanged: (value) {
+                  if (ValidTextField().validEmail(value)) {
+                    setState(() {
+                      statusMessageErrorEmail = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorEmail = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText:
+                        statusMessageErrorEmail ? "Correo invalido" : "",
+                    counterStyle: TextStyle(
+                        color:
+                            statusMessageErrorEmail ? Colors.red : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: statusMessageErrorEmail
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su correo"),
               ),
@@ -977,18 +1579,40 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Contraseña"),
-            SizedBox(
+            const Text("Contraseña"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerUsernameContrasena,
-                decoration: const InputDecoration(
+                obscureText: true,
+                onChanged: (value) {
+                  if (ValidTextField().validPassword(value)) {
+                    setState(() {
+                      statusMessageErrorPassword = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorPassword = false;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                    counterText: statusMessageErrorPassword
+                        ? "maximo 10 caracteres"
+                        : "",
+                    counterStyle: TextStyle(
+                        color: statusMessageErrorPassword
+                            ? Colors.red
+                            : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(
+                            color: statusMessageErrorPassword
+                                ? Colors.red
+                                : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su contraseña"),
@@ -999,21 +1623,35 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Biografia"),
-            SizedBox(
+            const Text("Bio"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
+                maxLines: 5,
                 controller: _controllerUsernameBio,
-                decoration: const InputDecoration(
-                    focusedBorder: OutlineInputBorder(
+                onChanged: (value) {
+                  valueBio = value;
+                  setState(() {});
+                },
+                decoration: InputDecoration(
+                    counterText: "${valueBio.length}/50",
+                    helperText:
+                        valueBio.length > 49 ? "Maximo 20 caracteres" : "",
+                    helperStyle: TextStyle(
+                        color:
+                            valueBio.length >= 50 ? Colors.red : Colors.grey),
+                    counterStyle: TextStyle(
+                        color:
+                            valueBio.length >= 50 ? Colors.red : Colors.grey),
+                    focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    hintText: "Escriba su Biografia"),
+                    hintText: "Escriba su biografia"),
               ),
             )
           ],
@@ -1021,18 +1659,31 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Instrumento"),
-            SizedBox(
+            const Text("Instrumento"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerInstrumentos,
-                decoration: const InputDecoration(
+                onChanged: (value) {
+                  if (ValidTextField().validInstrument(value)) {
+                    setState(() {
+                      statusMessageErrorInstrumet = true;
+                    });
+                  } else {
+                    setState(() {
+                      statusMessageErrorInstrumet = false;
+                    });
+                  }
+                },
+                decoration:  InputDecoration(
+                  counterText: statusMessageErrorInstrumet ? "Maximo 10 caracteres" : "",
+                  counterStyle: TextStyle(color: statusMessageErrorInstrumet ? Colors.red : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(color: statusMessageErrorInstrumet ?Colors.red : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba sus Intrusmentos"),
@@ -1043,18 +1694,32 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Telefono"),
-            SizedBox(
+            const Text("Telefono"),
+            const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerPhone,
-                decoration: const InputDecoration(
+                keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  if (ValidTextField().validNumber(value)) {
+                    setState(() {
+                      statusMessageErrorNumber = true;
+                    });
+                  }else{
+                    setState(() {
+                      statusMessageErrorNumber = false;
+                    });
+                  }
+                },
+                decoration:  InputDecoration(
+                  counterText: statusMessageErrorNumber ? "Numero invalido": "",
+                  counterStyle: TextStyle(color: statusMessageErrorNumber ? Colors.red  : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(color: statusMessageErrorNumber ? Colors.red: Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su Telefono"),
@@ -1065,18 +1730,32 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Correo de contacto"),
-            SizedBox(
+           const Text("Correo de contacto"),
+           const SizedBox(
               height: 10,
             ),
             Container(
-              width: size.width * 0.8,
+              width: size.width * 0.88,
               decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
               child: TextField(
                 controller: _controllerEmailContact,
-                decoration: const InputDecoration(
+                keyboardType: TextInputType.emailAddress,
+                onChanged: (value) {
+                  if (ValidTextField().validEmail(value)) {
+                    setState(() {
+                      statusMessageErrorEmailContact = true;
+                    });
+                  }else{
+                    setState(() {
+                      statusMessageErrorEmailContact = false;
+                    });
+                  }
+                },
+                decoration:  InputDecoration(
+                  counterText: statusMessageErrorEmailContact ? "Correo invalido": "",
+                  counterStyle: TextStyle(color: statusMessageErrorEmailContact ? Colors.red : Colors.grey),
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
+                        borderSide: BorderSide(color: statusMessageErrorEmailContact ?Colors.red : Color(0xffD9D9D9))),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xffD9D9D9))),
                     hintText: "Escriba su correo de contacto"),
@@ -1087,26 +1766,135 @@ class _SignUpState extends State<SignUp> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Ubicaion"),
-            const SizedBox(
+            Text("Ubicacion"),
+            SizedBox(
               height: 10,
             ),
-            Container(
-              width: size.width * 0.8,
-              decoration: const BoxDecoration(color: Color(0xffF7F7F7)),
-              child: TextField(
-                controller: _controllerUsernameUbicacion,
-                decoration: const InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xffD9D9D9))),
-                    hintText: "Escriba su Ubicacion"),
+            GestureDetector(
+              onTap: () async {
+                final position =
+                    await Navigator.push(context, MaterialPageRoute(
+                  builder: (context) {
+                    return const ViewLocation();
+                  },
+                ));
+                print(position);
+                if (position !=null ) {
+                setState(() {
+                  latitude =
+                      position["latitude"] + "  -  " + position["longitude"];
+                });
+                }else{
+                  if(mounted){
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Ubicacion no detecta")));
+                  }
+                }
+              },
+              child: Container(
+                width: size.width * 0.88,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    color: Color(0xffF7F7F7)),
+                child: Text(latitude),
               ),
             )
           ],
         ),
       ],
     );
+  }
+
+  void verifyArtist() async {
+    if (_controllerUsername.text.isNotEmpty &&
+        _controllerUsernameBio.text.isNotEmpty &&
+        _controllerUsernameContrasena.text.isNotEmpty &&
+        _controllerUsernameEmail.text.isNotEmpty &&
+        _controllerformacion.text.isNotEmpty &&
+        _controllerEmailContactPresskit.text.isNotEmpty &&
+        _controllerPhone.text.isNotEmpty &&
+        _controllerLinkContenido.text.isNotEmpty &&
+        _controllerAllPersons.text.isNotEmpty &&
+        genDrow.isNotEmpty &&
+        imgProfile != null && latitude.isNotEmpty
+        // && presskit != null && imgProfile != null
+        ) {
+          setState(() {
+                      loading = true;
+                    });
+      ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("Creando cuenta...")));
+         
+      Map<String, dynamic> artist = {
+        "name": _controllerUsername.text,
+        "email": _controllerUsernameEmail.text,
+        "password": _controllerUsernameContrasena.text,
+        "name_artistic": _controllerUsername.text,
+        "photo_profile": imgProfile!.path,
+        "brief_description": _controllerUsernameBio.text,
+        "location": latitude,
+        "background": imgBackground!.path
+      };
+      Map<String, dynamic> presskit = {
+        "anio_formacion": _controllerformacion.text,
+        "genero": genDrow,
+        "correo_contecto": _controllerEmailContactPresskit.text,
+        "telefono": _controllerPhone.text,
+        "link_a_contenido": _controllerLinkContenido.text,
+        "total_integrantes": _controllerAllPersons.text
+      };
+      final response = await ApiServices().createArtist(artist, presskit);
+
+      if (response == StatusAccount.successfully) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Usuario se creo correctamente")));
+          Navigator.pushReplacementNamed(context, "home-page-artist");
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Usuario no se creo correctamente")));
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Rellenar todos los campos")));
+    }
+  }
+
+  void verifyClient() async {
+      ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("Creando cuenta...")));
+    if (_controllerUsername.text.isNotEmpty &&
+        _controllerLstName.text.isNotEmpty &&
+        _controllerUsernameEmail.text.isNotEmpty &&
+        _controllerUsernameContrasena.text.isNotEmpty &&
+        imgProfile != null &&
+        _controllerPhone.text.isNotEmpty) {
+      Map<String, dynamic> user = {
+        "name": _controllerUsername.text,
+        "lastname": _controllerLstName.text,
+        "mail": _controllerUsernameEmail.text,
+        "password": _controllerUsernameContrasena.text,
+        "photo_profile":
+            imgProfile!.path,
+        "number_phone": _controllerPhone.text
+      };
+      final response = await ApiServices().createComunidad(user);
+
+      if (response == StatusAccount.successfully) {
+        if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Usuario creado")));
+          Navigator.pushReplacementNamed(context, "home-page-community");
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("No se pudo crear intentelo de nuevo")));
+        }
+      }
+    }
   }
 }

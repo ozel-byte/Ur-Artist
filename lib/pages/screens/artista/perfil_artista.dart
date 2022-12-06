@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:urartist/controller/saveUserSharedPreferences.dart';
+import 'package:urartist/controller/services.dart';
 
 import '../../../utils/global_colors.dart';
 
@@ -15,17 +17,10 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
   bool activeTextAppBar = false;
   bool activePhotoAppBar = false;
   bool activeGridScroll = false;
-  List<String> images = [
-    "https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/1916821/pexels-photo-1916821.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/1327426/pexels-photo-1327426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/442540/pexels-photo-442540.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/1427368/pexels-photo-1427368.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/1652361/pexels-photo-1652361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/213207/pexels-photo-213207.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/2601215/pexels-photo-2601215.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    ""
-  ];
+  bool viewImageFullScreen = false;
+  String imgSelected = "";
+  String description = "";
+ 
 
   @override
   void initState() {
@@ -37,7 +32,7 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
         print(_scrollControllerGrid.position.pixels);
         if (_scrollControllerGrid.position.pixels ==
             _scrollControllerGrid.position.minScrollExtent) {
-          print("llego al inicio del grid");
+         
           setState(() {
             activeGridScroll = false;
           });
@@ -55,7 +50,7 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
           _scrollController.position.pixels) {
         setState(() {});
         _scrollControllerGrid.animateTo(300,
-            duration: Duration(seconds: 2), curve: Curves.ease);
+            duration: const Duration(seconds: 2), curve: Curves.ease);
       }
       if (_scrollController.position.pixels > 130) {
         setState(() {
@@ -81,29 +76,35 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      body: CustomScrollView(
+      body: FutureBuilder(
+        future: SaveUserSharedPreferences().getUser(),
+        builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return  Stack(
+            children: [
+              CustomScrollView(
         controller: _scrollController,
         slivers: [
           SliverAppBar(
               title: activeTextAppBar
-                  ? const Text(
-                      "Mala Racha",
+                  ?  Text(
+                     snapshot.data!["name_artistic"],
                       style: TextStyle(color: Colors.black),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [Text("Artista"), Icon(Icons.verified)],
+                      children: const [Text("Artista"), Icon(Icons.verified)],
                     ),
               backgroundColor: Colors.white,
               expandedHeight: 400,
               centerTitle: true,
               actions: [
                 activePhotoAppBar
-                    ? const Padding(
-                        padding: EdgeInsets.only(top: 10),
+                    ?  Padding(
+                        padding:const EdgeInsets.only(top: 10),
                         child: CircleAvatar(
                           radius: 25,
-                          backgroundImage: AssetImage("assets/profile.jpg"),
+                          backgroundImage: NetworkImage(snapshot.data!["photo_profile"]),
                         ),
                       )
                     : Container()
@@ -113,9 +114,11 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                   children: [
                     Stack(
                       children: [
-                        const Image(
+                         Image(
+                          width: size.width,
+                          height: size.height*0.32,
                             fit: BoxFit.cover,
-                            image: AssetImage("assets/back.jpg")),
+                            image: NetworkImage(snapshot.data!["photo_portada"])),
                         Row(
                           children: [
                             Padding(
@@ -127,11 +130,11 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                                   height: 80,
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(50),
-                                      image:const DecorationImage(
+                                      image: DecorationImage(
                                         fit: BoxFit.cover,
                                           image:
-                                              AssetImage("assets/profile.jpg")),
-                                      border: Border.all(color: Colors.blue,width: 3)),
+                                              NetworkImage(snapshot.data!["photo_profile"])),
+                                      border: Border.all(color: Colors.white,width: 3)),
                                 )),
                           ],
                         )
@@ -142,31 +145,80 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                           top: size.height * 0.03, left: 20, right: 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children:  [
                           Text(
-                            "Mala Racha",
-                            style: TextStyle(
+                            snapshot.data!["name_artistic"],
+                            style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold),
                           ),
                           Text(
-                              "Banda de rock conformada  por integrantes de chiapas",
+                              snapshot.data!["brief_description"],
                               style:
-                                  TextStyle(color: Colors.grey, fontSize: 16))
+                                  const TextStyle(color: Colors.grey, fontSize: 16))
                         ],
                       ),
                     )
                   ],
                 ),
               )),
-          SliverList(delegate: SliverChildListDelegate([tabs(size)]))
+          SliverList(delegate: SliverChildListDelegate([tabs(size,snapshot)]))
         ],
       ),
+                      viewImageFullScreen
+            ? Positioned(
+                left: size.width * 0.08,
+                top: size.height * 0.25,
+                child: Container(
+                  width: size.width * 0.85,
+                  height: size.height * 0.38,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                            color: Colors.black.withOpacity(0.4))
+                      ],
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Column(
+                    children: [
+                      Container(
+                          width: size.width,
+                          height: size.height * 0.3,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10)),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10)),
+                            child: Image(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(imgSelected)),
+                          )),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          description,
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              )
+            : Text("")
+            ],
+          );
+        }else{
+          return const Center(child: CircularProgressIndicator(),);
+        }
+      },)
     );
   }
 
-  Widget tabs(Size size) {
+  Widget tabs(Size size,snapshot) {
     return SizedBox(
       width: size.width,
       height: size.height * 0.89,
@@ -193,9 +245,9 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                 Expanded(
                   child: TabBarView(
                     children: [
-                      photo(size),
-                      video(size),
-                      info(size),
+                      photo(size,snapshot),
+                      video(size,snapshot),
+                      info(size,snapshot),
                     ],
                   ),
                 )
@@ -205,15 +257,15 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
     );
   }
 
-  Container info(Size size) {
-    return Container(
+  Widget info(Size size,AsyncSnapshot snapshot) {
+    return SizedBox(
       width: size.width,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Column(
             children: [
-              SizedBox(
+            const  SizedBox(
                 height: 20,
               ),
               Row(
@@ -226,7 +278,7 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                         color: GlobalColor.textInforGeneralColor),
                   ),
                   Text(
-                    "Mala5@gmail.com",
+                    snapshot.data["email"],
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -234,7 +286,7 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                   )
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               Row(
@@ -253,7 +305,7 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                           color: GlobalColor.textInforGeneralColor))
                 ],
               ),
-              SizedBox(
+             const  SizedBox(
                 height: 20,
               ),
               Column(
@@ -266,12 +318,12 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
                         fontSize: 22,
                         color: GlobalColor.textInforGeneralColor),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: const [
                       Icon(
                         Icons.star,
                         color: Colors.yellow,
@@ -479,37 +531,73 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
     );
   }
 
-  Container video(Size size) {
-    return Container(
+  Widget video(Size size,AsyncSnapshot snapshot) {
+    return SizedBox(
       width: size.width,
-      child: GridView.builder(
+      child:FutureBuilder(
+        future: ApiServices().getImgUser(snapshot.data["id"]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return  GridView.builder(
         shrinkWrap: true,
         controller: _scrollControllerGrid,
         physics: activeGridScroll
             ? const AlwaysScrollableScrollPhysics()
-            : NeverScrollableScrollPhysics(),
+            : const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
         ),
         itemCount: 8,
         itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child:
-                  Image(fit: BoxFit.cover, image: NetworkImage(images[index])),
+          return  GestureDetector(
+            onLongPress: () {
+              print("precionado: " + index.toString());
+                setState(() {
+                  viewImageFullScreen = true;
+                  imgSelected = snapshot.data!["data"][index]["link_contenido"];
+                  description = snapshot.data!["data"][index]["descripcion"];
+                });
+            },
+            onLongPressCancel: () {
+                setState(() {
+                  viewImageFullScreen = false;
+                });
+            },
+            onLongPressEnd: (details) {
+                setState(() {
+                  viewImageFullScreen = false;
+                });
+              },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5, right: 5),
+              child: Card(
+                color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image(
+                      fit: BoxFit.cover, image: NetworkImage(snapshot.data!["data"][index]["link_contenido"])),
+                ),
+              ),
             ),
           );
         },
-      ),
+      );
+          }else{
+            return const CircularProgressIndicator();
+          }
+        },
+      )
     );
   }
 
-  Widget photo(Size size) {
+  Widget photo(Size size,AsyncSnapshot snapshot) {
     return SizedBox(
       width: size.width,
-      child: GridView.builder(
+      child:FutureBuilder(
+        future: ApiServices().getImgUser(snapshot.data["id"]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return  GridView.builder(
         shrinkWrap: true,
         controller: _scrollControllerGrid,
         physics: activeGridScroll
@@ -519,21 +607,47 @@ class _PerfilArtistav2State extends State<PerfilArtistav2> {
           crossAxisCount: 2,
           crossAxisSpacing: 1,
         ),
-        itemCount: 8,
+        itemCount: snapshot.data!.length,
         itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(left: 5, right: 5),
-            child: Card(
-              color: Colors.amber[100],
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image(
-                    fit: BoxFit.cover, image: NetworkImage(images[index])),
+          
+          return GestureDetector(
+            onLongPress: () {
+              print("precionado: " + index.toString());
+                setState(() {
+                  viewImageFullScreen = true;
+                  imgSelected = snapshot.data!["data"][index]["link_contenido"];
+                  description = snapshot.data!["data"][index]["descripcion"];
+                });
+            },
+            onLongPressCancel: () {
+                setState(() {
+                  viewImageFullScreen = false;
+                });
+            },
+            onLongPressEnd: (details) {
+                setState(() {
+                  viewImageFullScreen = false;
+                });
+              },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5, right: 5),
+              child: Card(
+                color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image(
+                      fit: BoxFit.cover, image: NetworkImage(snapshot.data!["data"][index]["link_contenido"])),
+                ),
               ),
             ),
           );
         },
-      ),
+      );
+          }else{
+            return const Center(child: const CircularProgressIndicator());
+          }
+        },
+      )
     );
   }
 }

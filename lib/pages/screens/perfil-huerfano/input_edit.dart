@@ -36,7 +36,7 @@ class _InputEditState extends State<InputEdit> {
                 onPressed: () async {
                   if (usernameStatus) {
                    bool? statusviabra = await Vibration.hasAmplitudeControl();
-                    if (statusviabra!) {
+                    if (!statusviabra!) {
                       Vibration.vibrate(amplitude: 128);
                     }
                     print("object");

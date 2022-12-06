@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Future.delayed(Duration(milliseconds: 5000)).then((value) => Navigator.pushReplacementNamed(context, "home"));
+    Future.delayed(const Duration(milliseconds: 5000)).then((value) => Navigator.pushNamed(context, "login"));
   }
   @override
   Widget build(BuildContext context) {
